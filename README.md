@@ -1,6 +1,12 @@
-# 📂 TP1 - Gestion Utilisateurs
+Bien sûr ! Voici une **version mise à jour de ton README** pour refléter la structure **CQRS** que nous avons mise en place :
 
-Ce projet est une **API REST TypeScript** qui gère des utilisateurs avec un CRUD complet. L’architecture est organisée en **couches (Domain, Application, Infrastructure, Presentation)** et inclut la **gestion automatique du profil** d’un utilisateur en fonction de son email.
+---
+
+# 📂 TP1 - Gestion Utilisateurs (CQRS)
+
+Ce projet est une **API REST TypeScript** qui gère des utilisateurs avec un CRUD complet.
+L’architecture est organisée en **couches (Domain, Application, Infrastructure, Presentation)** et utilise le **pattern CQRS** pour séparer les opérations de lecture et d’écriture.
+La gestion automatique du profil d’un utilisateur est basée sur son email.
 
 ---
 
@@ -13,24 +19,34 @@ Architecture-logicielle/
 │   ├── entities/
 │   │   └── User.ts
 │   ├── repositories/
-│   │   └── IUserRepository.ts
+│   │   ├── IUserCommandRepository.ts
+│   │   └── IUserQueryRepository.ts
 │   └── services/
 │       └── IUserService.ts
 │
 ├── application/
-│   ├── dto/
-│   │   └── UserDTO.ts
-│   └── use-cases/
-│       ├── CreateUserUseCase.ts
-│       ├── GetUserUseCase.ts
-│       ├── UpdateUserUseCase.ts
-│       └── DeleteUserUseCase.ts
+│   ├── commands/
+│   │   ├── CreateUserCommand.ts
+│   │   ├── UpdateUserCommand.ts
+│   │   └── DeleteUserCommand.ts
+│   ├── queries/
+│   │   └── GetUserQuery.ts
+│   ├── handlers/
+│   │   ├── command-handlers/
+│   │   │   ├── CreateUserHandler.ts
+│   │   │   ├── UpdateUserHandler.ts
+│   │   │   └── DeleteUserHandler.ts
+│   │   └── query-handlers/
+│   │       └── GetUserHandler.ts
+│   └── dto/
+│       └── UserDTO.ts
 │
 ├── infrastructure/
 │   ├── database/
 │   │   └── orm.config.ts
-│   └── repositories/
-│       └── UserRepository.ts
+│   ├── repositories/
+│   │   ├── UserCommandRepository.ts
+│   │   └── UserQueryRepository.ts
 │   └── services/
 │       └── UserService.ts
 │
@@ -51,7 +67,7 @@ Architecture-logicielle/
 1. **CRUD Utilisateur**
 
    * Créer un utilisateur
-   * Récupérer un utilisateur par ID
+   * Récupérer un utilisateur par ID ou tous les utilisateurs
    * Mettre à jour un utilisateur
    * Supprimer un utilisateur
 
@@ -60,12 +76,12 @@ Architecture-logicielle/
    * Si l’email se termine par `@company.com` → profil `ADMIN`
    * Sinon → profil `STANDARD`
 
-3. **Architecture en couches**
+3. **Architecture CQRS**
 
-   * **Domain** : Entités, interfaces et règles métier.
-   * **Application** : Cas d’utilisation et DTO.
-   * **Infrastructure** : Stockage, implémentations concrètes et services.
-   * **Presentation** : Contrôleurs et routes HTTP (Express).
+   * **Commands** : opérations d’écriture (Create, Update, Delete)
+   * **Queries** : opérations de lecture (Get by ID, Get all)
+   * **Handlers** : contiennent la logique métier et orchestrent les repositories
+   * **Repositories** : séparés pour lecture et écriture
 
 ---
 
@@ -74,17 +90,21 @@ Architecture-logicielle/
 ### Domaine
 
 * `User.ts` → Classe représentant un utilisateur.
-* `IUserRepository.ts` → Interface pour le repository utilisateur.
+* `IUserCommandRepository.ts` → Interface pour les opérations d’écriture.
+* `IUserQueryRepository.ts` → Interface pour les opérations de lecture.
 * `IUserService.ts` → Interface pour la logique métier (profil automatique).
 
 ### Application
 
-* `UserDTO.ts` → Structure des données envoyées par le client.
-* `CreateUserUseCase.ts`, `GetUserUseCase.ts`, `UpdateUserUseCase.ts`, `DeleteUserUseCase.ts` → Cas d’utilisation CRUD.
+* `commands/` → Commandes CRUD (Create, Update, Delete).
+* `queries/` → Requêtes de lecture (GetUser, GetAllUsers).
+* `handlers/` → Handlers pour exécuter les commandes et requêtes.
+* `dto/` → Structure des données envoyées par le client.
 
 ### Infrastructure
 
-* `UserRepository.ts` → Implémentation en mémoire (remplaçable par ORM/DB).
+* `UserCommandRepository.ts` → Implémentation des opérations d’écriture.
+* `UserQueryRepository.ts` → Implémentation des opérations de lecture.
 * `UserService.ts` → Logique métier pour assignation automatique des profils.
 
 ### Présentation
@@ -125,12 +145,13 @@ http://localhost:3000/users
 
 ## 🧪 Endpoints API
 
-| Méthode | URL          | Description                  | Body/Params                                          |
-| ------- | ------------ | ---------------------------- | ---------------------------------------------------- |
-| POST    | `/users`     | Créer un utilisateur         | `{ firstName, lastName, email, phone }`              |
-| GET     | `/users/:id` | Récupérer un utilisateur     | `id` dans params                                     |
-| PUT     | `/users`     | Mettre à jour un utilisateur | `{ id, firstName, lastName, email, phone, profile }` |
-| DELETE  | `/users/:id` | Supprimer un utilisateur     | `id` dans params                                     |
+| Méthode | URL          | Description                     | Body/Params                                 |
+| ------- | ------------ | ------------------------------- | ------------------------------------------- |
+| POST    | `/users`     | Créer un utilisateur            | `{ firstName, lastName, email, phone }`     |
+| GET     | `/users/:id` | Récupérer un utilisateur        | `id` dans params                            |
+| GET     | `/users`     | Récupérer tous les utilisateurs | Aucun                                       |
+| PUT     | `/users`     | Mettre à jour un utilisateur    | `{ id, firstName, lastName, email, phone }` |
+| DELETE  | `/users/:id` | Supprimer un utilisateur        | `id` dans params                            |
 
 ---
 
@@ -151,6 +172,7 @@ http://localhost:3000/users
 
 ## 🧩 Notes
 
-* Projet modulaire et testable grâce à l’architecture en couches.
+* Projet modulaire et testable grâce à l’architecture en couches et au pattern CQRS.
 * `UserRepository` en mémoire pour développement rapide ; peut être remplacé par un ORM comme TypeORM ou Prisma.
 * Tests unitaires possibles dans `tests/userController.test.ts`.
+
