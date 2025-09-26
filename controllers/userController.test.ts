@@ -1,18 +1,19 @@
+
 import request from 'supertest';
 import express from 'express';
 import bodyParser from 'body-parser';
-import * as userService from '../services/userService';
-import * as userController from './userController';
+import userService from '../services/userService';
+import userController from './userController';
 
 jest.mock('../services/userService');
 
 const app = express();
 app.use(bodyParser.json());
-app.post('/users', userController.create);
-app.get('/users', userController.list);
-app.get('/users/:id', userController.get);
-app.put('/users/:id', userController.update);
-app.delete('/users/:id', userController.remove);
+app.post('/users', (req, res) => userController.create(req, res));
+app.get('/users', (req, res) => userController.list(req, res));
+app.get('/users/:id', (req, res) => userController.get(req, res));
+app.put('/users/:id', (req, res) => userController.update(req, res));
+app.delete('/users/:id', (req, res) => userController.remove(req, res));
 
 const mockUser = {
   id: 1,
