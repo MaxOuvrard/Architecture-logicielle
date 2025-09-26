@@ -13,7 +13,7 @@ Architecture (3 couches simplifiée):
 - routes/ : exposition HTTP
 - controllers/ : gestion des requêtes/erreurs
 - services/ : règles métier (assignProfile)
-- repositories/ : accès au stockage (fichier JSON simple)
+- repositories/ : accès au stockage (bdd sequelize)
 
 Exemples d'API (server écoute sur le port 3000 par défaut):
 
@@ -41,5 +41,5 @@ npm start
 ```
 
 Notes:
-- Stockage simple dans `data/users.json` pour ce TP. Pas de base de données externe.
+- Stockage sous base de données sequelize
 - Améliorations possibles: validation plus complète, tests unitaires, pagination, recherche.
