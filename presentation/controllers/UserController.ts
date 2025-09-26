@@ -1,55 +1,79 @@
 import { Request, Response } from "express";
-import { CreateUserUseCase } from "../../application/useCase/CreateUserUseCase";
-import { GetUserUseCase } from "../../application/useCase/GetUserUseCase";
-import { UpdateUserUseCase } from "../../application/useCase/UpdateUserCase";
-import { DeleteUserUseCase } from "../../application/useCase/DeleteUserUseCase";
+import { CreateUserHandler } from "../../application/handlers/command-handler/CreateUserHandler";
+import { GetUserHandler } from "../../application/handlers/query-handler/GetUserHandler";
+import { UpdateUserHandler } from "../../application/handlers/command-handler/UpdateUserHandler";
+import { DeleteUserHandler } from "../../application/handlers/command-handler/DeleteUserHandler";
+
+import { CreateUserCommand } from "../../application/command/CreateUserCommand";
+import { UpdateUserCommand } from "../../application/command/UpdateUserCommand";
+import { DeleteUserCommand } from "../../application/command/DeleteUserCommand";
+import { GetUserQuery } from "../../application/queries/GetUserQuery";
 
 export class UserController {
   constructor(
-    private createUser: CreateUserUseCase,
-    private getUser: GetUserUseCase,
-    private updateUser: UpdateUserUseCase,
-    private deleteUser: DeleteUserUseCase
+    private createUserHandler: CreateUserHandler,
+    private getUserHandler: GetUserHandler,
+    private updateUserHandler: UpdateUserHandler,
+    private deleteUserHandler: DeleteUserHandler
   ) {}
 
-  create = async (req: Request, res: Response) => {
+  // 📌 CREATE
+  async create(req: Request, res: Response) {
     try {
-      const user = await this.createUser.execute(req.body);
+      const command = new CreateUserCommand(
+        req.body.firstName,
+        req.body.lastName,
+        req.body.email,
+        req.body.phone
+      );
+      const user = await this.createUserHandler.execute(command);
       res.status(201).json(user);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+    } catch (err) {
+      res.status(500).json({ message: (err as Error).message });
     }
-  };
+  }
 
-  get = async (req: Request, res: Response) => {
+  // 📌 READ
+  async get(req: Request, res: Response) {
     try {
-      const user = await this.getUser.execute(req.params.id);
-      if (!user) return res.status(404).json({ error: "User not found" });
-      res.json(user);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      const query = new GetUserQuery(req.params.id);
+      const user = await this.getUserHandler.execute(query);
+      if (!user) return res.status(404).json({ message: "User not found" });
+      res.status(200).json(user);
+    } catch (err) {
+      res.status(500).json({ message: (err as Error).message });
     }
-  };
+  }
 
-  update = async (req: Request, res: Response) => {
+  // 📌 UPDATE
+  async update(req: Request, res: Response) {
     try {
-      const user = await this.updateUser.execute(req.body);
-      if (!user) return res.status(404).json({ error: "User not found" });
-      res.json(user);
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+      const command = new UpdateUserCommand(
+        req.body.id,
+        req.body.firstName,
+        req.body.lastName,
+        req.body.email,
+        req.body.phone
+      );
+      const user = await this.updateUserHandler.execute(command);
+      if (!user) return res.status(404).json({ message: "User not found" });
+      res.status(200).json(user);
+    } catch (err) {
+      res.status(500).json({ message: (err as Error).message });
     }
-  };
+  }
 
-  delete = async (req: Request, res: Response) => {
+  // 📌 DELETE
+  async delete(req: Request, res: Response) {
     try {
-      const result = await this.deleteUser.execute(req.params.id);
-      if (result === null) {
-        return res.status(404).json({ error: "User not found" });
-      }
+      const command = new DeleteUserCommand(req.params.id);
+      await this.deleteUserHandler.execute(command);
       res.status(204).send();
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
+    } catch (err) {
+      if ((err as Error).message === "User not found") {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.status(500).json({ message: (err as Error).message });
     }
-  };
+  }
 }
